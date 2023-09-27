@@ -23,7 +23,7 @@ fn get_random_tls_config(nciphers: usize) -> ClientConfig {
     let mut client_config = rustls::ClientConfig::builder()
         .with_cipher_suites(&ciphers)
         .with_kx_groups(&kx_groups)
-        .with_protocol_versions(&*versions);
+        .with_protocol_versions(&versions);
 
     // occassionally unsupported ciphers are generated
     while client_config.is_err() {
@@ -31,14 +31,14 @@ fn get_random_tls_config(nciphers: usize) -> ClientConfig {
         client_config = rustls::ClientConfig::builder()
             .with_cipher_suites(&ciphers)
             .with_kx_groups(&kx_groups)
-            .with_protocol_versions(&*versions);
+            .with_protocol_versions(&versions);
     }
 
-    let client_config = client_config
+    
+    client_config
         .unwrap()
         .with_root_certificates(root_certs)
-        .with_no_client_auth();
-    client_config
+        .with_no_client_auth()
 }
 
 /// get a random tls connector
@@ -47,15 +47,15 @@ fn get_random_tls_config(nciphers: usize) -> ClientConfig {
 ///     let config = get_random_https_connector(5);
 /// ```
 pub fn get_random_https_connector() -> HttpsConnector<hyper::client::HttpConnector> {
-    let nciphers = utils::get_random_int(3, 6) as usize;
+    let nciphers = utils::get_random_int(3, 6);
     let config = get_random_tls_config(nciphers);
-    let connector = hyper_rustls::HttpsConnectorBuilder::new()
+    
+    hyper_rustls::HttpsConnectorBuilder::new()
         .with_tls_config(config)
         .https_or_http()
         .enable_http1()
         .enable_http2()
-        .build();
-    connector
+        .build()
 }
 /// get random hyper client
 /// # Eg
@@ -72,7 +72,7 @@ pub async fn get_random_hyper_client() -> hyper::Client<HttpsConnector<hyper::cl
 
     client.pool_idle_timeout(pool_timeout);
 
-    let http1_max_buf_size = utils::get_random_int(400 * 1024, 1024 * 1024) as usize;
+    let http1_max_buf_size = utils::get_random_int(400 * 1024, 1024 * 1024);
     client.http1_max_buf_size(http1_max_buf_size);
     client.http1_read_buf_exact_size(http1_max_buf_size);
 
@@ -85,7 +85,7 @@ mod test_client {
 
     #[tokio::test]
     async fn test_client_creation() {
-        for _ in (1..100).into_iter() {
+        for _ in 1..100 {
             let _ = get_random_hyper_client().await;
         }
     }

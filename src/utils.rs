@@ -99,8 +99,8 @@ const USER_AGENTS: [&str; 91] = [
 #[inline(always)]
 pub(crate) fn get_random_int(start: usize, stop: usize) -> usize {
     let mut rng = rand::thread_rng();
-    let random_int = rng.gen_range(start..stop);
-    random_int
+    
+    rng.gen_range(start..stop)
 }
 
 pub(crate) fn get_random_usr_agent() -> &'static str {
