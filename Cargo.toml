@@ -1,0 +1,14 @@
+[package]
+authors = ["Brandon Simpson"]
+name = "hyper_stunt"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+hyper = { version = "0.14.27", features = ["full"] }
+hyper-rustls = { version = "0.24.1", features = ["webpki-roots", "webpki-tokio", "http2"] }
+rand = "0.8.5"
+rand_core = { version = "0.6.4", features = ["alloc", "getrandom"] }
+rustls = "0.21.7"
+tokio = { version = "1.32.0", features = ["full"] }
+webpki-roots = "0.25.2"
