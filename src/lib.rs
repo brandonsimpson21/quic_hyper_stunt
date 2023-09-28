@@ -1,3 +1,3 @@
 pub mod client;
+pub mod headers;
 mod utils;
-pub use utils::add_random_user_agent;

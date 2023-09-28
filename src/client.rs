@@ -34,7 +34,6 @@ fn get_random_tls_config(nciphers: usize) -> ClientConfig {
             .with_protocol_versions(&versions);
     }
 
-    
     client_config
         .unwrap()
         .with_root_certificates(root_certs)
@@ -49,7 +48,7 @@ fn get_random_tls_config(nciphers: usize) -> ClientConfig {
 pub fn get_random_https_connector() -> HttpsConnector<hyper::client::HttpConnector> {
     let nciphers = utils::get_random_int(3, 6);
     let config = get_random_tls_config(nciphers);
-    
+
     hyper_rustls::HttpsConnectorBuilder::new()
         .with_tls_config(config)
         .https_or_http()

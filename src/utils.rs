@@ -1,4 +1,3 @@
-use hyper::{Body, Request};
 use rand::Rng;
 use rustls::{SupportedKxGroup, SupportedProtocolVersion};
 
@@ -99,7 +98,7 @@ const USER_AGENTS: [&str; 91] = [
 #[inline(always)]
 pub(crate) fn get_random_int(start: usize, stop: usize) -> usize {
     let mut rng = rand::thread_rng();
-    
+
     rng.gen_range(start..stop)
 }
 
@@ -137,35 +136,5 @@ pub(crate) fn get_random_protocols() -> Vec<&'static SupportedProtocolVersion> {
         0 => protocols[0..1].to_vec(),
         1 => protocols[0..2].to_vec(),
         _ => protocols[0..3].to_vec(),
-    }
-}
-
-#[inline(always)]
-#[allow(unused)]
-pub fn add_random_user_agent(req: &mut Request<Body>) {
-    req.headers_mut()
-        .insert("User-Agent", get_random_usr_agent().parse().unwrap());
-}
-
-#[cfg(test)]
-mod test_utils {
-    use super::*;
-
-    #[test]
-    fn test_add_random_user_agent() {
-        let agent = get_random_usr_agent();
-        let mut req = Request::new(Body::empty());
-        let mut new_agent;
-
-        // 1 in USER_AGENTS.len() chance of failing
-        loop {
-            add_random_user_agent(&mut req);
-            let headers = req.headers();
-            new_agent = headers.get("User-Agent").unwrap().to_str().unwrap();
-            if new_agent != agent {
-                break;
-            }
-        }
-        assert_ne!(new_agent, agent);
     }
 }

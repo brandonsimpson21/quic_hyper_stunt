@@ -3,8 +3,17 @@ authors = ["Brandon Simpson"]
 name = "hyper_stunt"
 version = "0.1.0"
 edition = "2021"
+license = "MIT"
+
+[build]
+rustflags = ["--cfg", "tracing_unstable"]
+
+[dev-dependencies]
+tower = { version = "0.4.13", features = ["full", "tokio", "tokio-stream"] }
+tower-http = { version = "0.4.4", features = ["full"] }
 
 [dependencies]
+http = "0.2.9"
 hyper = { version = "0.14.27", features = ["full"] }
 hyper-rustls = { version = "0.24.1", features = ["webpki-roots", "webpki-tokio", "http2"] }
 rand = "0.8.5"
