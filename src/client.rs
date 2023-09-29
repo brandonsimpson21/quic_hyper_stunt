@@ -15,7 +15,7 @@ fn get_root_store() -> rustls::RootCertStore {
     root_store
 }
 
-fn get_random_tls_config(nciphers: usize) -> ClientConfig {
+pub fn get_random_tls_config(nciphers: usize) -> ClientConfig {
     let root_certs = get_root_store();
     let mut ciphers = utils::get_random_ciphersuites(nciphers);
     let kx_groups = utils::get_random_kx_group();
