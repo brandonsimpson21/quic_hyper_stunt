@@ -15,6 +15,9 @@ fn get_root_store() -> rustls::RootCertStore {
     root_store
 }
 
+/// get a random tls config
+/// the returned config has randomized supported ciphers, kx_groups and protocol versions
+/// and respects the SSLKEYLOGFILE env var
 pub fn get_random_tls_config(nciphers: usize) -> ClientConfig {
     let root_certs = get_root_store();
     let mut ciphers = utils::get_random_ciphersuites(nciphers);
@@ -34,10 +37,13 @@ pub fn get_random_tls_config(nciphers: usize) -> ClientConfig {
             .with_protocol_versions(&versions);
     }
 
-    client_config
-        .unwrap()
+    let mut client_config = client_config
+        .expect("unreachable after loop")
         .with_root_certificates(root_certs)
-        .with_no_client_auth()
+        .with_no_client_auth();
+
+    client_config.key_log = std::sync::Arc::new(rustls::KeyLogFile::new());
+    client_config
 }
 
 /// get a random tls connector
@@ -46,7 +52,7 @@ pub fn get_random_tls_config(nciphers: usize) -> ClientConfig {
 ///     let config = get_random_https_connector(5);
 /// ```
 pub fn get_random_https_connector() -> HttpsConnector<hyper::client::HttpConnector> {
-    let nciphers = utils::get_random_int(3, 6);
+    let nciphers = utils::get_random_int(3, rustls::ALL_CIPHER_SUITES.len());
     let config = get_random_tls_config(nciphers);
 
     hyper_rustls::HttpsConnectorBuilder::new()
