@@ -98,17 +98,17 @@ const USER_AGENTS: [&str; 91] = [
 #[inline(always)]
 pub(crate) fn get_random_int(start: usize, stop: usize) -> usize {
     let mut rng = rand::thread_rng();
-
     rng.gen_range(start..stop)
 }
 
-pub(crate) fn get_random_usr_agent() -> &'static str {
+/// get a random user agent
+pub fn get_random_usr_agent() -> &'static str {
     USER_AGENTS
         .get(get_random_int(0, USER_AGENTS.len()))
         .expect("unreachable, bounds of get match bounds of get_random_int")
 }
 
-pub(crate) fn get_random_ciphersuites(n: usize) -> Vec<rustls::SupportedCipherSuite> {
+pub fn get_random_ciphersuites(n: usize) -> Vec<rustls::SupportedCipherSuite> {
     let csuits = rustls::DEFAULT_CIPHER_SUITES;
     let mut selected_suites = Vec::with_capacity(n);
     let mut selected_ids = std::collections::HashSet::new();
@@ -124,15 +124,15 @@ pub(crate) fn get_random_ciphersuites(n: usize) -> Vec<rustls::SupportedCipherSu
     selected_suites
 }
 
-pub(crate) fn get_random_kx_group() -> Vec<&'static SupportedKxGroup> {
+pub fn get_random_kx_group() -> Vec<&'static SupportedKxGroup> {
     let groups = rustls::ALL_KX_GROUPS.to_vec();
-    let idx = rand::thread_rng().gen_range(0..groups.len());
+    let idx = get_random_int(0, groups.len());
     vec![groups[idx]]
 }
 
-pub(crate) fn get_random_protocols() -> Vec<&'static SupportedProtocolVersion> {
+pub fn get_random_protocols() -> Vec<&'static SupportedProtocolVersion> {
     let protocols = rustls::ALL_VERSIONS.to_vec();
-    match rand::thread_rng().gen_range(0..protocols.len()) {
+    match get_random_int(0, protocols.len()) {
         0 => protocols[0..1].to_vec(),
         1 => protocols[0..2].to_vec(),
         _ => protocols[0..3].to_vec(),
