@@ -62,6 +62,14 @@ pub fn get_random_https_connector() -> HttpsConnector<hyper::client::HttpConnect
         .enable_http2()
         .build()
 }
+
+/// get a random tls connector
+pub fn get_random_tls_connector()->tokio_rustls::TlsConnector{
+    let nciphers = utils::get_random_int(3, rustls::ALL_CIPHER_SUITES.len());
+    let config = get_random_tls_config(nciphers);
+    tokio_rustls::TlsConnector::from(std::sync::Arc::new(config))
+}
+
 /// get random hyper client
 /// # Eg
 /// ```Rust

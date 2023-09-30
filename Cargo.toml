@@ -5,9 +5,6 @@ version = "0.1.0"
 edition = "2021"
 license = "MIT"
 
-[build]
-rustflags = ["--cfg", "tracing_unstable"]
-
 [dev-dependencies]
 tower = { version = "0.4.13", features = ["full", "tokio", "tokio-stream"] }
 tower-http = { version = "0.4.4", features = ["full"] }
@@ -20,4 +17,5 @@ rand = "0.8.5"
 rand_core = { version = "0.6.4", features = ["alloc", "getrandom"] }
 rustls = "0.21.7"
 tokio = { version = "1.32.0", features = ["full"] }
+tokio-rustls = "0.24.1"
 webpki-roots = "0.25.2"
