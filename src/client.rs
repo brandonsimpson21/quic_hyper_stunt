@@ -19,6 +19,15 @@ fn get_root_store() -> rustls::RootCertStore {
 /// get a random tls config
 /// the returned config has randomized supported ciphers, kx_groups and protocol versions
 /// and respects the SSLKEYLOGFILE env var
+/// /// # Eg
+/// ```
+/// use hyper_stunt::client::get_random_tls_config;
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let config = get_random_tls_config(5);
+///     Ok(())
+/// }
+/// ```
 pub fn get_random_tls_config(nciphers: usize) -> ClientConfig {
     let root_certs = get_root_store();
     let mut ciphers = utils::get_random_ciphersuites(nciphers);
@@ -49,8 +58,13 @@ pub fn get_random_tls_config(nciphers: usize) -> ClientConfig {
 
 /// get a random tls connector
 /// # Eg
-/// ```Rust
-///     let config = get_random_https_connector(5);
+/// ```
+/// use hyper_stunt::client::get_random_https_connector;
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let connector = get_random_https_connector();
+///     Ok(())
+/// }
 /// ```
 pub fn get_random_https_connector() -> HttpsConnector<hyper::client::HttpConnector> {
     let nciphers = utils::get_random_int(3, rustls::ALL_CIPHER_SUITES.len());
@@ -65,6 +79,15 @@ pub fn get_random_https_connector() -> HttpsConnector<hyper::client::HttpConnect
 }
 
 /// get a random tls connector
+/// /// Eg 
+/// ```
+/// use hyper_stunt::client::{get_random_tls_stream, get_random_tls_connector};
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let connector = get_random_tls_connector(); 
+///     Ok(())
+/// }
+/// ```
 pub fn get_random_tls_connector()->tokio_rustls::TlsConnector{
     let nciphers = utils::get_random_int(3, rustls::ALL_CIPHER_SUITES.len());
     let config = get_random_tls_config(nciphers);
@@ -94,9 +117,14 @@ pub async fn get_random_tls_stream(addr: &str, port: u16) -> Result<tokio_rustls
 }
 
 /// get random hyper client
-/// # Eg
-/// ```Rust
-///    let client = get_random_hyper_client(5).await;
+/// Eg 
+/// ```
+/// use hyper_stunt::client::get_random_hyper_client;
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let client = get_random_hyper_client().await;
+///     Ok(())
+/// }
 /// ```
 pub async fn get_random_hyper_client() -> hyper::Client<HttpsConnector<hyper::client::HttpConnector>>
 {

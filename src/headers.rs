@@ -13,29 +13,33 @@ pub fn add_random_user_agent(req: &mut Request<Body>) {
 /// get a random user agent
 /// this is most usefule for tower layers
 /// EG;
-/// ```Rust
-/// use http::HeaderValue;
+/// ```
+/// use http::{header, HeaderValue};
 /// use tower_http::set_header::SetRequestHeaderLayer;
-///
+/// use hyper::{Body, Request, Response};
+/// use tower::{ServiceBuilder, ServiceExt, Service};
+/// use hyper_stunt::headers::get_random_user_agent_headval;
+/// 
 /// #[tokio::main]
-//  async fn main() -> Result<(), Box<dyn std::error::Error>> {
-// let http_client = tower::service_fn(|req: Request<Body>| async move {
-//         Ok::<_, std::convert::Infallible>(Response::new(Body::empty()))
-// });
-// let layer = SetRequestHeaderLayer::overriding(
-//              header::USER_AGENT,
-//              |_: &Request<Body>| {
-//                  Some(get_random_user_agent_headval())
-//              }
-//          );
-//  let mut svc = ServiceBuilder::new()
-//      .layer(layer)
-//      .service(http_client);
+///  async fn main() -> Result<(), Box<dyn std::error::Error>> {
+/// let http_client = tower::service_fn(|req: Request<Body>| async move {
+///         Ok::<_, std::convert::Infallible>(Response::new(Body::empty()))
+/// });
+/// let layer = SetRequestHeaderLayer::overriding(
+///              header::USER_AGENT,
+///              |_: &Request<Body>| {
+///                  Some(get_random_user_agent_headval())
+///              }
+///          );
+///  let mut svc = ServiceBuilder::new()
+///      .layer(layer)
+///      .service(http_client);
 
-//  let request = Request::new(Body::empty());
-//  let _ = svc.ready().await.unwrap().call(request).await.unwrap();
+///  let request = Request::new(Body::empty());
+///  let _ = svc.ready().await.unwrap().call(request).await.unwrap();
 ///    Ok(())
 /// }
+/// ```
 pub fn get_random_user_agent_headval() -> HeaderValue {
     let agent = get_random_usr_agent();
     http::header::HeaderValue::from_str(agent).expect("invalid user agent")
