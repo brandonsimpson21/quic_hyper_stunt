@@ -1,5 +1,6 @@
 use hyper_rustls::HttpsConnector;
 use rustls::ClientConfig;
+use tokio::net::TcpStream;
 
 use crate::utils;
 
@@ -68,6 +69,28 @@ pub fn get_random_tls_connector()->tokio_rustls::TlsConnector{
     let nciphers = utils::get_random_int(3, rustls::ALL_CIPHER_SUITES.len());
     let config = get_random_tls_config(nciphers);
     tokio_rustls::TlsConnector::from(std::sync::Arc::new(config))
+}
+
+/// get a random tls stream
+/// Eg 
+/// ```
+/// use hyper_stunt::client::{get_random_tls_stream, get_random_tls_connector};
+/// #[tokio::main]
+/// async fn main() -> Result<(), Box<dyn std::error::Error>> {
+///     let addr = "reddit.com";
+///     let port = 443u16;
+///     let mut stream = get_random_tls_stream(addr, port).await;
+///     assert!(stream.is_ok());
+///     Ok(())
+/// }
+/// ```
+pub async fn get_random_tls_stream(addr: &str, port: u16) -> Result<tokio_rustls::client::TlsStream<tokio::net::TcpStream>, Box<dyn std::error::Error>> {
+    let tls_connector = get_random_tls_connector();
+    let ip_addr = format!("{}:{}", addr, port);
+    let stream = TcpStream::connect(ip_addr).await?;
+    let server_name = rustls::ServerName::try_from(addr)?;
+    let stream = tls_connector.connect(server_name, stream).await?;
+    Ok(stream)
 }
 
 /// get random hyper client
