@@ -19,7 +19,7 @@ pub fn add_random_user_agent(req: &mut Request<Body>) {
 /// use hyper::{Body, Request, Response};
 /// use tower::{ServiceBuilder, ServiceExt, Service};
 /// use hyper_stunt::headers::get_random_user_agent_headval;
-/// 
+///
 /// #[tokio::main]
 ///  async fn main() -> Result<(), Box<dyn std::error::Error>> {
 /// let http_client = tower::service_fn(|req: Request<Body>| async move {
