@@ -1,6 +1,6 @@
 [package]
 authors = ["Brandon Simpson"]
-name = "hyper_stunt"
+name = "quic_hyper_stunt"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"

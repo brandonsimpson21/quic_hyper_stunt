@@ -1,6 +1,6 @@
 use bytes::Bytes;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use hyper_stunt::quic::{
+use quic_hyper_stunt::quic::{
     self, client, common::read_recv_stream, error::NetworkError, handlers::handle_accept, server,
 };
 use quinn::Endpoint;
