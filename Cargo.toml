@@ -32,5 +32,5 @@ webpki-roots = "0.25.2"
 
 
 [[bench]]
-name = "my_benchmark"
+name = "client_server_benchmark"
 harness = false
