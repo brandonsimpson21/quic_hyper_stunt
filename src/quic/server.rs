@@ -7,11 +7,6 @@ use super::error::NetworkError;
 
 /// Constructs a QUIC endpoint configured to listen for incoming connections on a certain address
 /// and port.
-///
-/// ## Returns
-///
-/// - a stream of incoming QUIC connections
-/// - server certificate
 pub fn default_endpoint(
     listen_addr: SocketAddr,
     cert: Certificate,
@@ -34,7 +29,7 @@ pub fn default_crypto(
     server_crypto.key_log = Arc::new(rustls::KeyLogFile::new());
     Ok(server_crypto)
 }
-/// Returns default server configuration along with its certificate.
+/// Returns default server configuration.
 pub fn default_config(cert: Certificate, pk: PrivateKey) -> Result<ServerConfig, rustls::Error> {
     let server_crypto = default_crypto(cert, pk)?;
     let mut server_config = quinn::ServerConfig::with_crypto(Arc::new(server_crypto));

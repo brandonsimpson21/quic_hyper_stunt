@@ -13,8 +13,8 @@ mod test {
 
     #[tokio::test]
     async fn test_quic_client_server() -> Result<(), NetworkError> {
-        let (client, server) = quic::get_self_signed_client_server()?;
         let server_addr = "127.0.0.1:4000".to_socket_addrs()?.next().unwrap();
+        let (client, server) = quic::get_self_signed_client_server(server_addr)?;
         let server_handle = tokio::spawn(async move {
             let (mut send, recv) = handle_accept(server).await?;
             let buf = read_recv_stream(recv, None).await?;

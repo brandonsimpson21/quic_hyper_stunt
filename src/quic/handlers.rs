@@ -1,13 +1,15 @@
 use std::sync::Arc;
 
+use bytes::Bytes;
 use quinn::{Connecting, Endpoint, RecvStream, SendStream};
 use tracing::{info, instrument};
 
 use super::error::NetworkError;
 
-pub async fn run_server<F>(endpoint: Endpoint, handler: Arc<F>) -> Result<(), NetworkError>
+pub async fn run_server<F, R>(endpoint: Endpoint, handler: Arc<F>) -> Result<(), NetworkError>
 where
-    F: Fn(RecvStream, SendStream) -> Result<(), NetworkError> + Send + Sync + 'static,
+    F: Fn(RecvStream, SendStream) -> Result<R, NetworkError> + Send + Sync + 'static,
+    R: From<Bytes> + Send + 'static,
 {
     while let Some(conn) = endpoint.accept().await {
         let mut handler = handler.clone();
@@ -21,6 +23,7 @@ where
     Ok(())
 }
 
+/// accept and return the bi-directional stream
 pub async fn handle_accept(endpoint: Endpoint) -> Result<(SendStream, RecvStream), NetworkError> {
     if let Some(conn) = endpoint.accept().await {
         let conn = conn.await?;
