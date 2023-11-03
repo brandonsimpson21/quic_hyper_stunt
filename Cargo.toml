@@ -1,6 +1,6 @@
 [package]
 authors = ["Brandon Simpson"]
-name = "hyper_stunt"
+name = "quic_hyper_stunt"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
@@ -8,14 +8,29 @@ license = "MIT"
 [dev-dependencies]
 tower = { version = "0.4.13", features = ["full", "tokio", "tokio-stream"] }
 tower-http = { version = "0.4.4", features = ["full"] }
+criterion = { version = "0.4", features = ["html_reports"] }
+
 
 [dependencies]
+bytes = { version = "1.5.0", features = ["serde"] }
 http = "0.2.9"
 hyper = { version = "0.14.27", features = ["full"] }
 hyper-rustls = { version = "0.24.1", features = ["webpki-roots", "webpki-tokio", "http2"] }
+quinn = { version = "0.10.2", features = ["async-io", "async-std"] }
 rand = "0.8.5"
 rand_core = { version = "0.6.4", features = ["alloc", "getrandom"] }
+rcgen = { version = "0.11.3", features = ["zeroize"] }
 rustls = "0.21.7"
+rustls-pemfile = "1.0.3"
+thiserror = "1.0.50"
 tokio = { version = "1.32.0", features = ["full"] }
 tokio-rustls = "0.24.1"
+tracing = "0.1.40"
+url = { version = "2.4.1", features = ["serde"] }
 webpki-roots = "0.25.2"
+
+
+
+[[bench]]
+name = "client_server_benchmark"
+harness = false
