@@ -21,7 +21,7 @@ pub fn get_root_store() -> rustls::RootCertStore {
 /// and respects the SSLKEYLOGFILE env var
 /// /// # Eg
 /// ```
-/// use hyper_stunt::client::get_random_tls_config;
+/// use quic_hyper_stunt::client::get_random_tls_config;
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let config = get_random_tls_config(5);
@@ -59,7 +59,7 @@ pub fn get_random_tls_config(nciphers: usize) -> ClientConfig {
 /// get a random tls connector
 /// # Eg
 /// ```
-/// use hyper_stunt::client::get_random_https_connector;
+/// use quic_hyper_stunt::client::get_random_https_connector;
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let connector = get_random_https_connector();
@@ -81,7 +81,7 @@ pub fn get_random_https_connector() -> HttpsConnector<hyper::client::HttpConnect
 /// get a random tls connector
 /// /// Eg
 /// ```
-/// use hyper_stunt::client::{get_random_tls_stream, get_random_tls_connector};
+/// use quic_hyper_stunt::client::{get_random_tls_stream, get_random_tls_connector};
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let connector = get_random_tls_connector();
@@ -97,7 +97,7 @@ pub fn get_random_tls_connector() -> tokio_rustls::TlsConnector {
 /// get a random tls stream
 /// Eg
 /// ```
-/// use hyper_stunt::client::{get_random_tls_stream, get_random_tls_connector};
+/// use quic_hyper_stunt::client::{get_random_tls_stream, get_random_tls_connector};
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let addr = "reddit.com";
@@ -122,7 +122,7 @@ pub async fn get_random_tls_stream(
 /// get random hyper client
 /// Eg
 /// ```
-/// use hyper_stunt::client::get_random_hyper_client;
+/// use quic_hyper_stunt::client::get_random_hyper_client;
 /// #[tokio::main]
 /// async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ///     let client = get_random_hyper_client().await;
