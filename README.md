@@ -72,7 +72,7 @@ use http::{header, HeaderValue};
 use tower_http::set_header::SetRequestHeaderLayer;
 use hyper::{Body, Request, Response};
 use tower::{ServiceBuilder, ServiceExt, Service};
-use hyper_stunt::headers::get_random_user_agent_headval;
+use quic_hyper_stunt::headers::get_random_user_agent_headval;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
