@@ -1,5 +1,4 @@
 use bytes::Bytes;
-use quinn::RecvStream;
 use rustls::{Certificate, PrivateKey};
 use tracing::info;
 
@@ -10,10 +9,13 @@ pub fn generate_self_signed(
 ) -> Result<(Certificate, PrivateKey), rcgen::RcgenError> {
     tracing::info!("generating self-signed certificate");
     let cert = rcgen::generate_simple_self_signed(subject_alt_names)?;
-    let key = cert.serialize_private_key_der();
+    let key = cert.serialize_private_key_pem();
+    let cert_bytes = cert.serialize_pem().expect("failed to serialize cert");
+    std::fs::write("key.pem", &key).expect("failed to write key");
+    std::fs::write("cert.pem", &cert_bytes.as_bytes()).expect("failed to write cert");
     Ok((
         rustls::Certificate(cert.serialize_der()?),
-        rustls::PrivateKey(key),
+        rustls::PrivateKey(cert.serialize_private_key_der()),
     ))
 }
 
@@ -53,15 +55,4 @@ pub async fn bytes_escape(req: Bytes) -> Bytes {
     }
     info!("content = {:?}", String::from_utf8_lossy(&escaped));
     Bytes::from(escaped)
-}
-
-pub async fn read_recv_stream(
-    mut recv: RecvStream,
-    limit: Option<usize>,
-) -> Result<Bytes, NetworkError> {
-    let limit = limit.unwrap_or(64 * 1024);
-    match recv.read_to_end(limit).await {
-        Ok(req) => Ok(Bytes::from(req)),
-        Err(e) => Err(NetworkError::RecvError(format!("{:?}", e.to_string()))),
-    }
 }

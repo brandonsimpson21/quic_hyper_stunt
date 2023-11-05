@@ -1,4 +1,3 @@
-use quinn::{ConnectionError, ReadToEndError, WriteError};
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -9,10 +8,6 @@ pub enum NetworkError {
     FatalError(String),
     #[error("TLS Error")]
     TLSError(#[from] rustls::Error),
-    #[error("Connection Error")]
-    ConnectionError(#[from] ConnectionError),
-    #[error("Connection Error")]
-    ConnectError(#[from] quinn::ConnectError),
     #[error("Connection Closed Error{0}")]
     ConnectionClosedError(String),
     #[error("RequestError {0}")]
@@ -23,8 +18,6 @@ pub enum NetworkError {
     InternalError(String),
     #[error("unknownerror {0}")]
     Unknown(String),
-    #[error("Write Error")]
-    WriteError(#[from] WriteError),
 }
 
 impl From<Box<dyn std::error::Error>> for NetworkError {
@@ -33,8 +26,8 @@ impl From<Box<dyn std::error::Error>> for NetworkError {
     }
 }
 
-impl From<ReadToEndError> for NetworkError {
-    fn from(value: ReadToEndError) -> Self {
-        return Self::RecvError(value.to_string());
+impl From<anyhow::Error> for NetworkError {
+    fn from(value: anyhow::Error) -> Self {
+        return Self::InternalError(value.to_string());
     }
 }

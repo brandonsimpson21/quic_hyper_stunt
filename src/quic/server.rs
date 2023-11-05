@@ -1,40 +1,50 @@
-use std::{net::SocketAddr, sync::Arc};
+use anyhow::Result;
+use s2n_quic::stream::BidirectionalStream;
 
-use quinn::{Endpoint, ServerConfig};
-use rustls::{Certificate, PrivateKey};
+use std::{net::SocketAddr, path::Path, sync::Arc};
 
-use super::error::NetworkError;
+use futures::Future;
 
-/// Constructs a QUIC endpoint configured to listen for incoming connections on a certain address
-/// and port.
-pub fn default_endpoint(
-    listen_addr: SocketAddr,
-    cert: Certificate,
-    pk: PrivateKey,
-) -> Result<Endpoint, NetworkError> {
-    let server_config = default_config(cert, pk)?;
-    let endpoint = quinn::Endpoint::server(server_config, listen_addr)?;
-    Ok(endpoint)
+pub fn get_server(cert_path: &Path, key_path: &Path, addr: SocketAddr) -> Result<s2n_quic::Server> {
+    let server = s2n_quic::Server::builder()
+        .with_tls((cert_path, key_path))?
+        .with_io(addr)?
+        .start()?;
+    Ok(server)
 }
 
-pub fn default_crypto(
-    cert: Certificate,
-    pk: PrivateKey,
-) -> Result<rustls::ServerConfig, rustls::Error> {
-    let mut server_crypto = rustls::ServerConfig::builder()
-        .with_safe_defaults()
-        .with_no_client_auth()
-        .with_single_cert(vec![cert], pk)?;
-    server_crypto.alpn_protocols = super::ALPN_QUIC_HTTP.iter().map(|&x| x.into()).collect();
-    server_crypto.key_log = Arc::new(rustls::KeyLogFile::new());
-    Ok(server_crypto)
-}
-/// Returns default server configuration.
-pub fn default_config(cert: Certificate, pk: PrivateKey) -> Result<ServerConfig, rustls::Error> {
-    let server_crypto = default_crypto(cert, pk)?;
-    let mut server_config = quinn::ServerConfig::with_crypto(Arc::new(server_crypto));
-    let transport_config = Arc::get_mut(&mut server_config.transport).unwrap();
-    transport_config.max_concurrent_uni_streams(0_u8.into());
-    server_config.use_retry(true);
-    Ok(server_config)
+pub async fn run_server<F, Fut>(
+    cert_path: &Path,
+    key_path: &Path,
+    addr: SocketAddr,
+    handler: F,
+) -> Result<()>
+where
+    F: Fn(BidirectionalStream) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Result<()>> + Send + 'static,
+{
+    let handler = Arc::new(handler);
+    tokio::pin!(handler);
+
+    let mut server = get_server(cert_path, key_path, addr)?;
+    while let Some(mut connection) = server.accept().await {
+        let handler = handler.clone();
+        // spawn a new task for the connection
+        tokio::spawn(async move {
+            while let Ok(Some(stream)) = connection.accept_bidirectional_stream().await {
+                let handler = handler(stream);
+                // spawn a new task for the stream
+                let handle = tokio::spawn(async move {
+                    if let Err(e) = handler.await {
+                        let msg = format!("stream task failed {:?}", e);
+                        tracing::error!("{}", msg);
+                    }
+                });
+                if let Err(e) = handle.await {
+                    println!("stream task failed {:?}", e);
+                }
+            }
+        });
+    }
+    Ok(())
 }

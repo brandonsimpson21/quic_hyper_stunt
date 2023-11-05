@@ -5,40 +5,50 @@ Simple library of Network utilities.
 Quic and easy clients and servers.
 
 ```rust
-use std::{net::ToSocketAddrs, time::Duration};
 
-use quic_hyper_stunt::quic::{common::read_recv_stream, error::NetworkError, handlers::handle_accept};
+use anyhow::Result;
+use bytes::Bytes;
+use s2n_quic::stream::BidirectionalStream;
+use std::{net::SocketAddr, path::Path, sync::Arc};
+use quich_hyper_stunt::quic::{common, client, server};
+
+async fn server_handle_request(stream: BidirectionalStream) -> Result<()> {
+        let mut stream = stream;
+        while let Ok(Some(data)) = stream.receive().await {
+            stream.send(data).await.expect("stream should be open");
+        }
+        Ok(())
+}
 
  #[tokio::test]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let server_addr = "127.0.0.1:4000".to_socket_addrs()?.next().unwrap();
-    let (client, server) = quic::get_self_signed_client_server(server_addr)?;
-    
-    let server_handle = tokio::spawn(async move {
-        let (mut send, recv) = handle_accept(server).await?;
-        let buf = read_recv_stream(recv, None).await?;
-        assert_eq!(buf, b"hello".to_vec());
-        send.write_all(&*b"world".to_vec()).await?;
-        send.finish().await?;
-        Ok::<_, NetworkError>(())
+async fn main() -> Result<()> {
+   common::generate_self_signed(vec!["localhost".to_string()])?;
+    let addr: SocketAddr = "127.0.0.1:4433".parse()?;
+
+    let fxn = Box::new(server_handle_request);
+
+    tokio::spawn(async move {
+        let _ =
+            server::run_server(Path::new("cert.pem"), Path::new("key.pem"), addr, fxn).await;
     });
 
-    let client_conn = client
-        .connect(server_addr, "127.0.0.1")
-        .map_err(|e| NetworkError::InternalError(e.to_string()))?
-        .await?;
-    let (mut client_send, client_recv) = client_conn.open_bi().await?;
+    let (client, stream) =
+        client::client_connect(addr, "localhost", Path::new("cert.pem"), true).await?;
     
-    client_send.write_all(&*b"hello".to_vec()).await?;
-    client_send.finish().await?;
-    let buf = read_recv_stream(client_recv, None).await?;
-    client.close(0u32.into(), b"done");
-    assert!(buf == b"world".to_vec());
+    let (mut receive_stream, mut send_stream) = stream.split();
+    
+    let test_data = vec![
+        "hello".to_string(),
+        "world".to_string(),
+        "foo".to_string(),
+        "bar".to_string(),
+    ];
 
-    let _ = tokio::time::timeout(Duration::from_secs(60), client.wait_idle()).await;
-
-    if let Err(e) = server_handle.await {
-        return Err(NetworkError::InternalError(e.to_string()));
+    for data in test_data.iter().cloned() {
+        let data = Bytes::from(data);
+        send_stream.send(data.clone()).await?;
+        let response = receive_stream.receive().await?;
+        assert_eq!(response, Some(data));
     }
 
     Ok(())

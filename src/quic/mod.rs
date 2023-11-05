@@ -1,35 +1,51 @@
-#![allow(unused)]
-
 pub mod client;
 pub mod common;
 pub mod error;
-pub mod handlers;
 pub mod server;
 
-use std::net::{SocketAddr, ToSocketAddrs as _};
+#[cfg(test)]
+mod test {
+    use super::*;
+    use anyhow::Result;
+    use bytes::Bytes;
+    use s2n_quic::stream::BidirectionalStream;
+    use std::{net::SocketAddr, path::Path, sync::Arc};
 
-use quinn::Endpoint;
-use rustls::{Certificate, PrivateKey};
+    async fn server_handle_request(stream: BidirectionalStream) -> Result<()> {
+        let mut stream = stream;
+        while let Ok(Some(data)) = stream.receive().await {
+            stream.send(data).await.expect("stream should be open");
+        }
+        Ok(())
+    }
 
-use self::error::NetworkError;
+    #[tokio::test]
+    async fn test_client_server() -> anyhow::Result<()> {
+        common::generate_self_signed(vec!["localhost".to_string()])?;
+        let addr: SocketAddr = "127.0.0.1:4433".parse()?;
 
-pub(crate) const ALPN_QUIC_HTTP: &[&[u8]] = &[b"hq-29"];
+        let fxn = Box::new(server_handle_request);
 
-/// sent by h2 clients after negotiating over ALPN, or when doing h2c.
-pub(crate) const PREFACE: &[u8] = b"PRI * HTTP/2.0\r\n\r\nSM\r\n\r\n";
+        tokio::spawn(async move {
+            let _ =
+                server::run_server(Path::new("cert.pem"), Path::new("key.pem"), addr, fxn).await;
+        });
 
-pub(crate) const CRLF: &str = "\r\n";
-
-/// Get a self signed certificate for server_addr
-pub fn get_self_signed_client_server(
-    server_addr: SocketAddr,
-) -> Result<(Endpoint, Endpoint), NetworkError> {
-    let (cert, key) = common::generate_self_signed(vec!["127.0.0.1".to_string()])
-        .expect("could not generate self signed cert");
-    let server = server::default_endpoint(server_addr, cert.clone(), key)?;
-    let mut roots = rustls::RootCertStore::empty();
-    roots.add(&cert)?;
-    let client = client::default_endpoint(roots)?;
-
-    Ok((client, server))
+        let (client, stream) =
+            client::client_connect(addr, "localhost", Path::new("cert.pem"), true).await?;
+        let (mut receive_stream, mut send_stream) = stream.split();
+        let test_data = vec![
+            "hello".to_string(),
+            "world".to_string(),
+            "foo".to_string(),
+            "bar".to_string(),
+        ];
+        for data in test_data.iter().cloned() {
+            let data = Bytes::from(data);
+            send_stream.send(data.clone()).await?;
+            let response = receive_stream.receive().await?;
+            assert_eq!(response, Some(data));
+        }
+        Ok(())
+    }
 }

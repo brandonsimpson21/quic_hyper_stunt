@@ -1,27 +1,33 @@
-use std::{net::SocketAddr, sync::Arc};
+use anyhow::Result;
+use s2n_quic::{client::Connect, stream::BidirectionalStream};
 
-use bytes::Bytes;
-use quinn::Endpoint;
-use rustls::RootCertStore;
+use std::{net::SocketAddr, path::Path, sync::Arc};
 
-use super::error::NetworkError;
+use futures::Future;
 
-pub fn default_client_crypto(roots: RootCertStore) -> Arc<rustls::ClientConfig> {
-    let mut client_crypto = rustls::ClientConfig::builder()
-        .with_safe_defaults()
-        .with_root_certificates(roots)
-        .with_no_client_auth();
-
-    client_crypto.alpn_protocols = super::ALPN_QUIC_HTTP.iter().map(|&x| x.into()).collect();
-    client_crypto.key_log = Arc::new(rustls::KeyLogFile::new());
-    Arc::new(client_crypto)
+pub fn get_client(cert_pem_path: &Path) -> Result<s2n_quic::Client> {
+    let client = s2n_quic::Client::builder()
+        .with_tls(cert_pem_path)?
+        .with_io("0.0.0.0:0")?
+        .start()?;
+    Ok(client)
 }
+pub async fn client_connect(
+    addr: SocketAddr,
+    server_name: &str,
+    cert_pem_path: &Path,
+    keep_alive: bool,
+) -> Result<(s2n_quic::Client, BidirectionalStream)> {
+    let client = get_client(cert_pem_path)?;
 
-pub fn default_endpoint(roots: RootCertStore) -> Result<Endpoint, NetworkError> {
-    let client_crypto = default_client_crypto(roots);
-    let client_config = quinn::ClientConfig::new(client_crypto);
-    let mut endpoint = quinn::Endpoint::client("[::]:0".parse().unwrap())?;
-    endpoint.set_default_client_config(client_config);
+    let connect = Connect::new(addr).with_server_name(server_name);
+    let mut connection = client.connect(connect).await?;
 
-    Ok(endpoint)
+    // ensure the connection doesn't time out with inactivity
+    connection.keep_alive(keep_alive)?;
+
+    // open a new stream
+    let stream = connection.open_bidirectional_stream().await?;
+
+    Ok::<_, anyhow::Error>((client, stream))
 }
