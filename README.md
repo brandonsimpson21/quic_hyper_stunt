@@ -25,11 +25,9 @@ async fn main() -> Result<()> {
    common::generate_self_signed(vec!["localhost".to_string()])?;
     let addr: SocketAddr = "127.0.0.1:4433".parse()?;
 
-    let fxn = Box::new(server_handle_request);
-
     tokio::spawn(async move {
         let _ =
-            server::run_server(Path::new("cert.pem"), Path::new("key.pem"), addr, fxn).await;
+            server::run_server(Path::new("cert.pem"), Path::new("key.pem"), addr, server_handle_request).await;
     });
 
     let (client, stream) =

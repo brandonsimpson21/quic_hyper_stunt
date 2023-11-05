@@ -1,9 +1,7 @@
 use anyhow::Result;
 use s2n_quic::{client::Connect, stream::BidirectionalStream};
 
-use std::{net::SocketAddr, path::Path, sync::Arc};
-
-use futures::Future;
+use std::{net::SocketAddr, path::Path};
 
 pub fn get_client(cert_pem_path: &Path) -> Result<s2n_quic::Client> {
     let client = s2n_quic::Client::builder()

@@ -30,9 +30,3 @@ tokio-rustls = "0.24.1"
 tracing = "0.1.40"
 url = { version = "2.4.1", features = ["serde"] }
 webpki-roots = "0.25.2"
-
-
-
-[[bench]]
-name = "client_server_benchmark"
-harness = false

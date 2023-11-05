@@ -2,17 +2,21 @@ use bytes::Bytes;
 use rustls::{Certificate, PrivateKey};
 use tracing::info;
 
-use super::error::NetworkError;
-
 pub fn generate_self_signed(
     subject_alt_names: Vec<String>,
+    cert_path: Option<std::path::PathBuf>,
+    key_path: Option<std::path::PathBuf>,
 ) -> Result<(Certificate, PrivateKey), rcgen::RcgenError> {
     tracing::info!("generating self-signed certificate");
     let cert = rcgen::generate_simple_self_signed(subject_alt_names)?;
     let key = cert.serialize_private_key_pem();
     let cert_bytes = cert.serialize_pem().expect("failed to serialize cert");
-    std::fs::write("key.pem", &key).expect("failed to write key");
-    std::fs::write("cert.pem", &cert_bytes.as_bytes()).expect("failed to write cert");
+    if cert_path.is_some() {
+        std::fs::write("cert.pem", &cert_bytes.as_bytes()).expect("failed to write cert");
+    }
+    if key_path.is_some() {
+        std::fs::write("key.pem", &key).expect("failed to write key");
+    }
     Ok((
         rustls::Certificate(cert.serialize_der()?),
         rustls::PrivateKey(cert.serialize_private_key_der()),

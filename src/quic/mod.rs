@@ -9,7 +9,7 @@ mod test {
     use anyhow::Result;
     use bytes::Bytes;
     use s2n_quic::stream::BidirectionalStream;
-    use std::{net::SocketAddr, path::Path, sync::Arc};
+    use std::{net::SocketAddr, path::Path};
 
     async fn server_handle_request(stream: BidirectionalStream) -> Result<()> {
         let mut stream = stream;
@@ -21,17 +21,20 @@ mod test {
 
     #[tokio::test]
     async fn test_client_server() -> anyhow::Result<()> {
-        common::generate_self_signed(vec!["localhost".to_string()])?;
+        common::generate_self_signed(vec!["localhost".to_string()], None, None)?;
         let addr: SocketAddr = "127.0.0.1:4433".parse()?;
 
-        let fxn = Box::new(server_handle_request);
-
         tokio::spawn(async move {
-            let _ =
-                server::run_server(Path::new("cert.pem"), Path::new("key.pem"), addr, fxn).await;
+            let _ = server::run_server(
+                Path::new("cert.pem"),
+                Path::new("key.pem"),
+                addr,
+                server_handle_request,
+            )
+            .await;
         });
 
-        let (client, stream) =
+        let (_, stream) =
             client::client_connect(addr, "localhost", Path::new("cert.pem"), true).await?;
         let (mut receive_stream, mut send_stream) = stream.split();
         let test_data = vec![
