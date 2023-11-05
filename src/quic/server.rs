@@ -34,15 +34,12 @@ where
             while let Ok(Some(stream)) = connection.accept_bidirectional_stream().await {
                 let handler = handler(stream);
                 // spawn a new task for the stream
-                let handle = tokio::spawn(async move {
+                let _ = tokio::spawn(async move {
                     if let Err(e) = handler.await {
                         let msg = format!("stream task failed {:?}", e);
                         tracing::error!("{}", msg);
                     }
                 });
-                if let Err(e) = handle.await {
-                    println!("stream task failed {:?}", e);
-                }
             }
         });
     }
