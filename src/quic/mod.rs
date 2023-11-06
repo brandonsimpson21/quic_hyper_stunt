@@ -45,7 +45,8 @@ mod test {
         });
 
         let (_, stream) =
-            client::client_connect(addr, "localhost", Path::new("cert.pem"), true).await?;
+            client::client_connect_bidirectional(addr, "localhost", Path::new("cert.pem"), true)
+                .await?;
         let (mut receive_stream, mut send_stream) = stream.split();
         let test_data = vec![
             "hello".to_string(),
@@ -77,7 +78,8 @@ mod test {
         });
 
         let (_, stream) =
-            client::client_connect(addr, "localhost", Path::new("cert.pem"), true).await?;
+            client::client_connect_bidirectional(addr, "localhost", Path::new("cert.pem"), true)
+                .await?;
         let (mut receive_stream, mut send_stream) = stream.split();
         let test_data = vec![
             "hello".to_string(),
