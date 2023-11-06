@@ -20,6 +20,14 @@ async fn server_handle_request(stream: BidirectionalStream) -> Result<()> {
         Ok(())
 }
 
+async fn server_handle_conn(conn: Connection) -> Result<()> {
+        let mut conn = conn;
+        let stream = conn.accept_bidirectional_stream().await?.expect("stream should be open");
+        server_handle_request(stream).await?;
+        Ok(())
+    }
+
+
  #[tokio::test]
 async fn main() -> Result<()> {
    common::generate_self_signed(vec!["localhost".to_string()])?;
@@ -27,7 +35,11 @@ async fn main() -> Result<()> {
 
     tokio::spawn(async move {
         let _ =
-            server::run_server(Path::new("cert.pem"), Path::new("key.pem"), addr, server_handle_request).await;
+            // handler takes in connection
+            // server::run_server(Path::new("cert.pem"), Path::new("key.pem"), addr, server_handle_conn).await;
+            
+            // handler takes in BidirectionalStream
+            server::run_bidirectional_server(Path::new("cert.pem"), Path::new("key.pem"), addr, server_handle_request).await;
     });
 
     let (client, stream) =

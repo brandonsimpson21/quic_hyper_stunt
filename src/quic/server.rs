@@ -1,5 +1,5 @@
 use anyhow::Result;
-use s2n_quic::stream::BidirectionalStream;
+use s2n_quic::{stream::BidirectionalStream, Connection};
 
 use std::{net::SocketAddr, path::Path, sync::Arc};
 
@@ -14,6 +14,32 @@ pub fn get_server(cert_path: &Path, key_path: &Path, addr: SocketAddr) -> Result
 }
 
 pub async fn run_server<F, Fut>(
+    cert_path: &Path,
+    key_path: &Path,
+    addr: SocketAddr,
+    handler: F,
+) -> Result<()>
+where
+    F: Fn(Connection) -> Fut + Send + Sync + 'static,
+    Fut: Future<Output = Result<()>> + Send + 'static,
+{
+    let handler = Arc::new(handler);
+    tokio::pin!(handler);
+
+    let mut server = get_server(cert_path, key_path, addr)?;
+    while let Some(connection) = server.accept().await {
+        let handler = handler.clone();
+        tokio::spawn(async move {
+            if let Err(e) = handler(connection).await {
+                let msg = format!("connection task failed {:?}", e);
+                tracing::error!("{}\n{:?}", msg, e);
+            }
+        });
+    }
+    Ok(())
+}
+
+pub async fn run_bidirectional_server<F, Fut>(
     cert_path: &Path,
     key_path: &Path,
     addr: SocketAddr,
