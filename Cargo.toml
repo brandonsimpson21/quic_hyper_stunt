@@ -18,6 +18,8 @@ futures = "0.3.29"
 http = "0.2.9"
 hyper = { version = "0.14.27", features = ["full"] }
 hyper-rustls = { version = "0.24.1", features = ["webpki-roots", "webpki-tokio", "http2"] }
+libp2p = { version = "0.53.0", features = ["tokio", "gossipsub", "floodsub", "pnet", "quic", "serde", "tcp", "websocket", "rsa", "dns", "tls", "relay", "identify", "noise", "yamux", "ping", "macros", "rendezvous", "kad"] }
+libp2p-swarm = { version = "0.44.0", features = ["tokio", "macros"] }
 rand = "0.8.5"
 rand_core = { version = "0.6.4", features = ["alloc", "getrandom"] }
 rcgen = { version = "0.11.3", features = ["zeroize"] }

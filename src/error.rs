@@ -1,3 +1,5 @@
+use std::convert::Infallible;
+
 use thiserror::Error;
 
 #[derive(Error, Debug)]
@@ -18,6 +20,8 @@ pub enum NetworkError {
     InternalError(String),
     #[error("unknownerror {0}")]
     Unknown(String),
+    #[error("P2P Error {0}")]
+    P2PError(String),
 }
 
 impl From<Box<dyn std::error::Error>> for NetworkError {
@@ -28,6 +32,18 @@ impl From<Box<dyn std::error::Error>> for NetworkError {
 
 impl From<anyhow::Error> for NetworkError {
     fn from(value: anyhow::Error) -> Self {
+        return Self::InternalError(value.to_string());
+    }
+}
+
+impl From<libp2p::noise::Error> for NetworkError {
+    fn from(value: libp2p::noise::Error) -> Self {
+        return Self::P2PError(value.to_string());
+    }
+}
+
+impl From<Infallible> for NetworkError {
+    fn from(value: Infallible) -> Self {
         return Self::InternalError(value.to_string());
     }
 }
