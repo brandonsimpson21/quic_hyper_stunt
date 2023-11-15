@@ -18,6 +18,8 @@ pub enum NetworkError {
     InternalError(String),
     #[error("unknownerror {0}")]
     Unknown(String),
+    #[error("Hyper Error")]
+    HyperError(#[from] hyper::Error),
 }
 
 impl From<Box<dyn std::error::Error>> for NetworkError {
